@@ -18,7 +18,7 @@ public class Producer {
     @PostMapping("/publish")
     public String publish(@RequestBody PaymentProcess paymentProcess) {
 
-        kafkaTemplate.send("Payload",paymentProcess);
+        kafkaTemplate.send(Constants.topic,paymentProcess);
         return Constants.response;
     }  
 }
