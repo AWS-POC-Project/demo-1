@@ -8,7 +8,7 @@ public class BankProcessState {
 	
 	public BankProcessState(String name) {
 		this.name=name;
-		this.postURL="http://localhost:8080/"+ name;
+		this.postURL=Constants.base_url + name;
 		
 	}
 

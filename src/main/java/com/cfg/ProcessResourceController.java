@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 @RestController
 public class ProcessResourceController {
 
-	
 	// process flow
 	// request -> validate -> dispatch
 	BankProcessState request = new BankProcessState(state.values()[0].toString());
@@ -32,14 +31,14 @@ public class ProcessResourceController {
 	BankProcessEvent dispatchComplete = new BankProcessEvent(event.values()[2].toString());
 	// collect states and events
 	Set<BankProcessState> allStates = new HashSet<>(Arrays.asList(request, validate, dispatch, end));
-	Map<String, BankProcessEvent> eventMap=new HashMap<String, BankProcessEvent>();
-	Map<String, BankProcessState> stateMap=new HashMap<String, BankProcessState>();
+	Map<String, BankProcessEvent> eventMap = new HashMap<String, BankProcessEvent>();
+	Map<String, BankProcessState> stateMap = new HashMap<String, BankProcessState>();
 
 	StateMachine<BankProcessState, BankProcessEvent> stateMachine = null;
 
 	public ProcessResourceController() {
 		try {
-			stateMachine=buildMachine();
+			stateMachine = buildMachine();
 			stateMachine.start();
 			// map of events
 			eventMap.put(requestComplete.getName(), requestComplete);
@@ -50,24 +49,19 @@ public class ProcessResourceController {
 			stateMap.put("validate", validate);
 			stateMap.put("dispatch", dispatch);
 			stateMap.put("end", end);
-		}
-		catch(Exception e) {
+		} catch (Exception e) {
 			System.out.println("error starting state machine");
 		}
-		
+
 	}
 
 	@RequestMapping(path = "/process-resource", method = RequestMethod.PUT)
 	public String getNextStep(@RequestParam String eventName) throws Exception {
-			System.out.println("Invoking Process Controller with Event: "+eventName);
-		
-			stateMachine.sendEvent(eventMap.get(eventName));
-			// get the state : map to the resource
-			State<BankProcessState, BankProcessEvent> currentState = stateMachine.getState();
-			eventName=currentState.getId().getName()+"Event";
-		
+		System.out.println("Invoking Process Controller with Event: " + eventName);
 
-
+		stateMachine.sendEvent(eventMap.get(eventName));
+		State<BankProcessState, BankProcessEvent> currentState = stateMachine.getState();
+		eventName = currentState.getId().getName() + "Event";
 
 		return stateMachine.getState().getId().name;
 	}
@@ -75,16 +69,13 @@ public class ProcessResourceController {
 	public StateMachine<BankProcessState, BankProcessEvent> buildMachine() throws Exception {
 
 		Builder<BankProcessState, BankProcessEvent> builder = StateMachineBuilder.builder();
-		// TO DO: convert this to scenario, and use config db to pick this up
-		// actual process flow
 		builder.configureStates().withStates().initial(request).states(allStates);
 
 		builder.configureTransitions().withExternal().source(request).target(validate).event(requestComplete).and()
 				.withExternal().source(validate).target(dispatch).event(validateComplete).and().withExternal()
-				.source(dispatch).target(end).event(dispatchComplete).and().withExternal()
-				.source(end).target(validate).event(requestComplete);
+				.source(dispatch).target(end).event(dispatchComplete).and().withExternal().source(end).target(validate)
+				.event(requestComplete);
 
 		return builder.build();
 	}
-
 }
